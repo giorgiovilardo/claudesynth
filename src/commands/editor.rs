@@ -51,7 +51,7 @@ impl Editor for EnvEditor {
 
         let new_content = std::fs::read_to_string(&path)?;
 
-        if new_content == initial_content {
+        if new_content.trim_end() == initial_content.trim_end() {
             Ok(EditOutcome::Unchanged)
         } else {
             Ok(EditOutcome::Changed(new_content))
