@@ -20,7 +20,7 @@
 | `pulldown-cmark` | Markdown parsing for changelog extraction |
 | `serde` + `serde_json` | State serialization |
 | `thiserror` | Error enums (per-module + `AppError` in main) |
-| `tempfile` (dev) | Temp dirs for storage tests |
+| `tempfile` | Temp files for editor command + test temp dirs |
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Check the @README.md file for guidance.
 
 ### Key patterns
 
-- **Trait-based abstractions** for swappable backends: `ChangelogProvider`, `ChangelogSummarizer`, `SummaryFormatter`, `MessagePublisher`, `HistoryRepository`
+- **Trait-based abstractions** for swappable backends: `ChangelogProvider`, `ChangelogSummarizer`, `SummaryFormatter`, `MessagePublisher`, `HistoryRepository`, `Editor`
 - **`domain.rs` + implementation** pattern: each module separates trait definitions and error types (`domain.rs`) from concrete implementations
 - Each module has its own `thiserror` error enum; `main.rs` uses a custom `AppError` enum (no anyhow)
 
@@ -36,6 +36,7 @@ Check the @README.md file for guidance.
 
 - **`run`** — full pipeline: fetch → diff → summarize → format → publish → save history
 - **`show <version>`** — look up a version in history and print its stored summary
+- **`edit <version>`** — open stored summary in `$EDITOR`/`$VISUAL`, save changes back to history
 
 ## Conventions
 
