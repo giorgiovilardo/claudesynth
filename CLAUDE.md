@@ -45,6 +45,9 @@ Check the @README.md file for guidance.
 - Small commits, with `jj`
 - `just qa` must pass clean before committing (fmt + clippy + test + check)
 - No `mod.rs`: for modules, use the new style `modulename.rs` + `modulename/`
+- If you need to use `grep`, use `rg` (ripgrep)
+- If you need to use `find`, use `fd` (fd-find)
+- Update README.md and CLAUDE.md, if needed, after every feature.
 
 ## Running
 
