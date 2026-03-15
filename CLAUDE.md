@@ -2,11 +2,11 @@
 
 ## What is this
 
-claudesynth is a Rust CLI that fetches the Claude Code CHANGELOG.md from GitHub, diffs against last-seen versions, summarizes new entries via `claude -p`, and outputs Slack-ready markdown messages.
+`claudesynth` is a Rust CLI that fetches the Claude Code CHANGELOG.md from GitHub, checks if already summarized, if not summarize it via LLM, and output a synthesis.
 
 ## Language & toolchain
 
-- Rust, edition 2024, synchronous (no async runtime)
+- Rust, edition 2024, synchronous (no async runtime for now)
 - VCS: `jj` (Jujutsu), **never** raw `git` for commits/diffs/logs
 - Build runner: `just` (see justfile)
 
@@ -24,60 +24,27 @@ claudesynth is a Rust CLI that fetches the Claude Code CHANGELOG.md from GitHub,
 
 ## Architecture
 
-```
-version.rs                   — semver Version type (FromStr, Display, Ord, Serde)
-main.rs                      — Cli struct, AppError enum, pipeline orchestration
-
-changelog/                   — fetch & parse the Claude Code changelog
-  domain.rs                  — ChangelogError, ChangelogProvider trait, VersionEntry
-  http.rs                    — HttpChangelog (ureq fetch from GitHub)
-  parser.rs                  — pulldown-cmark parser → Vec<VersionEntry>, version diffing
-
-summarizer/                  — LLM summarization of changelog entries
-  domain.rs                  — Summary, ChangelogSummarizer trait, SummarizeError
-  claude.rs                  — ClaudeSummarizer (shells out to `claude -p` with prompt.txt)
-
-formatter/                   — format summary into publishable message
-  domain.rs                  — Message, SummaryFormatter trait, FormatError
-  markdown.rs                — MarkdownSummaryFormatter (builds final message with header/footer)
-
-publisher/                   — output abstraction
-  domain.rs                  — PublishError, MessagePublisher trait
-  stdout.rs                  — StdoutMessagePublisher (prints to stdout)
-
-history/                     — persistent run history
-  domain.rs                  — History, HistoryEntry, HistoryRepository trait, HistoryError
-  json_file.rs               — JsonHistoryRepository (persists as claudesynth-history.json)
-```
+Check the @README.md file for guidance.
 
 ### Key patterns
 
 - **Trait-based abstractions** for swappable backends: `ChangelogProvider`, `ChangelogSummarizer`, `SummaryFormatter`, `MessagePublisher`, `HistoryRepository`
 - **`domain.rs` + implementation** pattern: each module separates trait definitions and error types (`domain.rs`) from concrete implementations
 - Each module has its own `thiserror` error enum; `main.rs` uses a custom `AppError` enum (no anyhow)
-- History file (`claudesynth-history.json`) and `prompt.txt` live next to the binary via `std::env::current_exe()`
 
-### Pipeline flow
+### Commands
 
-1. Load history from `HistoryRepository`
-2. Fetch & diff via `ChangelogProvider::fetch_newer_than()` — returns only new `VersionEntry`s (on first run: latest 3)
-3. Summarize via `ChangelogSummarizer` (currently shells out to `claude -p`)
-4. Format into publishable message via `SummaryFormatter`
-5. Publish via `MessagePublisher` (currently stdout)
-6. Save updated history with per-version entries
+- **`run`** — full pipeline: fetch → diff → summarize → format → publish → save history
+- **`show <version>`** — look up a version in history and print its stored summary
 
 ## Conventions
 
 - **TDD**: red-green-refactor, baby steps, unit tests in every module (`#[cfg(test)] mod tests`)
-- **Never suppress warnings** — no `#[allow(unused_*)]`; fix the root cause (remove dead code, use the import, don't export until needed)
+- **Do not artificially suppress warning** — no escape hatches like `#[allow(unused_*)]`; fix the root cause. If in need of help, ask the user
 - **No vanity fields** — only include struct fields that serve a concrete purpose
-- Commit atomically per module/feature
+- Small commits, with `jj`
 - `just qa` must pass clean before committing (fmt + clippy + test + check)
-- Slack renders standard markdown — no Slack-specific mrkdwn formatting needed
-
-## Who works here
-
-Giorgio is an experienced developer who is new to Rust. He's comfortable with architecture concepts (traits, modules, error handling) but still building familiarity with Rust-specific libraries and idioms. He prefers clean abstractions and trait-based designs. Frame Rust explanations in general programming terms where possible.
+- No `mod.rs`: for modules, use the new style `modulename.rs` + `modulename/`
 
 ## Running
 
@@ -87,7 +54,3 @@ just test        # unit tests only
 just lint        # clippy only
 just run         # full pipeline
 ```
-
-## CI
-
-GitHub Actions (`.github/workflows/ci.yml`): fmt --check, clippy, test, build on ubuntu-latest with stable Rust.
