@@ -5,12 +5,15 @@ Rust CLI that fetches the [Claude Code changelog](https://github.com/anthropics/
 ## Usage
 
 ```
-claudesynth
+claudesynth run          # fetch, summarize, and publish new versions
+claudesynth show 2.1.78  # print the stored summary for a specific version
 ```
 
 Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`claude` CLI) to be installed and available on PATH.
 
 ## How it works
+
+The `run` command:
 
 ```
 Load history
@@ -22,11 +25,18 @@ Load history
   → Save updated history
 ```
 
+The `show` command looks up a version in the saved history and prints its stored summary.
+
 ## Architecture
 
 ```
 version.rs                   — semver Version type (FromStr, Display, Ord, Serde)
-main.rs                      — Cli struct, AppError enum, pipeline orchestration
+main.rs                      — Cli struct, AppError enum, command dispatcher
+
+commands/                    — subcommand implementations (trait-based DI)
+  commands.rs                — Command enum (clap Subcommand), re-exports
+  run.rs                     — full pipeline (fetch → summarize → format → publish → save)
+  show.rs                    — look up a version in history, print its summary
 
 changelog/                   — fetch & parse the Claude Code changelog
   domain.rs                  — ChangelogError, ChangelogProvider trait, VersionEntry
@@ -86,10 +96,10 @@ just lint       # cargo clippy -- -D warnings
 just fmt        # cargo fmt
 just build      # cargo build
 just release    # cargo build --release (stripped, LTO)
-just run        # run the pipeline
+just run        # run the full pipeline (claudesynth run)
 just clean      # cargo clean
 ```
 
 ## CI
 
-GitHub Actions runs on all pushes and pull requests to `main`: format check, clippy, test, build.
+GitHub Actions runs on pushes to `main` and on pull requests: format check, clippy, test, build.
