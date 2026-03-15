@@ -7,6 +7,7 @@ Rust CLI that fetches the [Claude Code changelog](https://github.com/anthropics/
 ```
 claudesynth run          # fetch, summarize, and publish new versions
 claudesynth show 2.1.78  # print the stored summary for a specific version
+claudesynth edit 2.1.78  # edit the stored summary in $EDITOR
 ```
 
 Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`claude` CLI) to be installed and available on PATH.
@@ -27,6 +28,8 @@ Load history
 
 The `show` command looks up a version in the saved history and prints its stored summary.
 
+The `edit` command opens the stored summary for a version in `$EDITOR` (or `$VISUAL`). If the content changes on save, the history entry is updated. If the version doesn't exist yet, a new entry is created.
+
 ## Architecture
 
 ```
@@ -37,6 +40,8 @@ commands/                    — subcommand implementations (trait-based DI)
   commands.rs                — Command enum (clap Subcommand), re-exports
   run.rs                     — full pipeline (fetch → summarize → format → publish → save)
   show.rs                    — look up a version in history, print its summary
+  edit.rs                    — open stored summary in $EDITOR, save changes
+  editor.rs                  — Editor trait, EditOutcome, EnvEditor ($EDITOR/$VISUAL)
 
 changelog/                   — fetch & parse the Claude Code changelog
   domain.rs                  — ChangelogError, ChangelogProvider trait, VersionEntry
@@ -60,7 +65,7 @@ history/                     — persistent run history
   json_file.rs               — JsonHistoryRepository (claudesynth-history.json)
 ```
 
-Five trait-based abstractions (`ChangelogProvider`, `ChangelogSummarizer`, `SummaryFormatter`, `MessagePublisher`, `HistoryRepository`) allow swapping backends without changing the pipeline.
+Six trait-based abstractions (`ChangelogProvider`, `ChangelogSummarizer`, `SummaryFormatter`, `MessagePublisher`, `HistoryRepository`, `Editor`) allow swapping backends without changing the pipeline.
 
 ## State
 
