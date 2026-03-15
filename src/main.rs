@@ -38,6 +38,9 @@ fn run() -> Result<(), AppError> {
             )
         }
         commands::Command::Show { version } => commands::show(&version, &repo),
+        commands::Command::Edit { version } => {
+            commands::edit(&version, &repo, &commands::EnvEditor)
+        }
     }
 }
 
@@ -68,6 +71,8 @@ enum AppError {
     Publish(#[from] publisher::PublishError),
     #[error("{0}")]
     Summarize(#[from] summarizer::SummarizeError),
+    #[error("{0}")]
+    Editor(#[from] commands::EditError),
     #[error("Version {0} not found in history")]
     VersionNotFound(Version),
 }
@@ -92,6 +97,9 @@ fn print_error(err: &AppError) {
         }
         AppError::VersionNotFound(v) => {
             eprintln!("Error: version {v} not found in history. Run `claudesynth run` first.");
+        }
+        AppError::Editor(commands::EditError::NoEditor) => {
+            eprintln!("Error: no editor configured. Set $EDITOR or $VISUAL.");
         }
         _ => eprintln!("Error: {err}"),
     }
@@ -132,6 +140,17 @@ mod tests {
     fn cli_parses_run_subcommand() {
         let cli = Cli::try_parse_from(["claudesynth", "run"]).unwrap();
         assert!(matches!(cli.command, commands::Command::Run));
+    }
+
+    #[test]
+    fn cli_parses_edit_subcommand() {
+        let cli = Cli::try_parse_from(["claudesynth", "edit", "2.1.78"]).unwrap();
+        match cli.command {
+            commands::Command::Edit { version } => {
+                assert_eq!(version.to_string(), "2.1.78");
+            }
+            _ => panic!("expected Edit command"),
+        }
     }
 
     #[test]
