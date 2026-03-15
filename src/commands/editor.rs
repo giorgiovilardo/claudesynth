@@ -3,8 +3,6 @@ use std::process::ExitStatus;
 
 #[derive(Debug, thiserror::Error)]
 pub enum EditError {
-    #[error("no editor configured — set $EDITOR or $VISUAL")]
-    NoEditor,
     #[error("editor exited with {0}")]
     EditorFailed(ExitStatus),
     #[error("IO error: {0}")]
@@ -24,16 +22,16 @@ pub trait Editor {
 pub struct EnvEditor;
 
 impl EnvEditor {
-    fn resolve_editor() -> Result<String, EditError> {
+    fn resolve_editor() -> String {
         std::env::var("EDITOR")
             .or_else(|_| std::env::var("VISUAL"))
-            .map_err(|_| EditError::NoEditor)
+            .unwrap_or_else(|_| "vim".to_string())
     }
 }
 
 impl Editor for EnvEditor {
     fn edit(&self, initial_content: &str) -> Result<EditOutcome, EditError> {
-        let editor = Self::resolve_editor()?;
+        let editor = Self::resolve_editor();
 
         let mut tmp = tempfile::Builder::new()
             .prefix("claudesynth-")
@@ -74,7 +72,10 @@ mod tests {
             match &self.outcome {
                 Ok(EditOutcome::Changed(s)) => Ok(EditOutcome::Changed(s.clone())),
                 Ok(EditOutcome::Unchanged) => Ok(EditOutcome::Unchanged),
-                Err(_) => Err(EditError::NoEditor),
+                Err(msg) => Err(EditError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    *msg,
+                ))),
             }
         }
     }

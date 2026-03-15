@@ -98,9 +98,6 @@ fn print_error(err: &AppError) {
         AppError::VersionNotFound(v) => {
             eprintln!("Error: version {v} not found in history. Run `claudesynth run` first.");
         }
-        AppError::Editor(commands::EditError::NoEditor) => {
-            eprintln!("Error: no editor configured. Set $EDITOR or $VISUAL.");
-        }
         _ => eprintln!("Error: {err}"),
     }
 }
