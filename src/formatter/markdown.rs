@@ -47,20 +47,7 @@ impl SummaryFormatter for MarkdownSummaryFormatter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::version::Version;
-
-    fn entry(version: &str, content: &str) -> VersionEntry {
-        VersionEntry {
-            version: version.parse::<Version>().unwrap(),
-            content: content.to_string(),
-        }
-    }
-
-    fn summary(text: &str) -> Summary {
-        Summary {
-            text: text.to_string(),
-        }
-    }
+    use crate::test_helpers::{summary, version_entry as entry};
 
     #[test]
     fn format_single_entry() {
