@@ -25,11 +25,11 @@ impl SummaryFormatter for MarkdownSummaryFormatter {
 
         let mut body = String::new();
         for (entry, summary) in items {
-            body.push_str(&format!("## {}\n\n{}\n\n", entry.version, summary.text));
+            body.push_str(&format!("*{}*\n\n{}\n\n", entry.version, summary.text));
         }
 
         let text = format!(
-            "# Claude Code Update — {version_range} ({count} new version{plural})\n\
+            "*Claude Code Update — {version_range} ({count} new version{plural})*\n\
              \n\
              ---\n\
              \n\
@@ -84,8 +84,8 @@ mod tests {
             (entry("2.1.77", "b"), summary("- Fix Y")),
         ];
         let msg = formatter.format(&items).unwrap();
-        assert!(msg.text.contains("## 2.1.78"));
-        assert!(msg.text.contains("## 2.1.77"));
+        assert!(msg.text.contains("*2.1.78*"));
+        assert!(msg.text.contains("*2.1.77*"));
         assert!(msg.text.contains("- Feature X"));
         assert!(msg.text.contains("- Fix Y"));
     }
@@ -95,7 +95,7 @@ mod tests {
         let formatter = MarkdownSummaryFormatter;
         let items = vec![(entry("2.1.78", "stuff"), summary("- Some change"))];
         let msg = formatter.format(&items).unwrap();
-        let header_pos = msg.text.find("# Claude Code Update").unwrap();
+        let header_pos = msg.text.find("*Claude Code Update").unwrap();
         let separator_pos = msg.text.find("---").unwrap();
         let link_pos = msg.text.find("[Changelog]").unwrap();
         let summary_pos = msg.text.find("- Some change").unwrap();

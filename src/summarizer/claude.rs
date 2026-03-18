@@ -29,7 +29,7 @@ Be aggressive about skipping minor or internal changes. Only surface stuff that 
 
 End each version's summary with a brief impression (1 sentence) of that release.
 
-Use standard markdown formatting (**bold**, `code`). Use bullet points for individual changes.
+Use Slack-compatible formatting: *bold* (single asterisk), _italic_ (underscores), `code` (backticks). Use bullet points for individual changes. Do NOT use markdown headings (##) or double asterisks (**bold**).
 
 Output ONLY a JSON object (no markdown fences, no extra text) with this exact structure:
 {\"summaries\": [{\"version\": \"x.y.z\", \"text\": \"...markdown summary...\"}]}";
